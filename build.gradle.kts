@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "com.example"
-version = "1.2.3"
+version = "1.2.4"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
@@ -21,12 +21,11 @@ dependencies {
 
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
-    // Paper 1.21.x runs on Java 21
     options.release.set(21)
 }
 
 tasks.jar {
-    // Make a "fat jar" that includes runtime deps (e.g., gson)
+    // Fat jar (bundles runtime deps like gson)
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from({
         configurations.runtimeClasspath.get()
