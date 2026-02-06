@@ -19,10 +19,10 @@ jobs:
           distribution: temurin
           java-version: "21"
 
-      - name: Install Gradle
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Build jar
+      - name: Build jar (shadowJar)
         run: gradle clean shadowJar
 
       - name: Upload artifact
