@@ -18,10 +18,12 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
-          cache: gradle
+
+      - name: Install Gradle
+        uses: gradle/actions/setup-gradle@v3
 
       - name: Build jar
-        run: ./gradlew clean shadowJar
+        run: gradle clean shadowJar
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
