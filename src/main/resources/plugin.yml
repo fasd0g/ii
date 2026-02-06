@@ -1,0 +1,19 @@
+name: AiChat
+version: 1.2.0
+main: com.example.aichat.AiChatPlugin
+api-version: "1.21"
+author: you
+description: "AI that talks in chat and reacts to join/quit/death/advancements with dynamic personas."
+
+commands:
+  aichat:
+    description: "Управление AI-чат ботом"
+    usage: "/aichat [help|status|reload|toggle|setname|setchance|setmention|persona|debug|test|setendpoint|setkey]"
+    permission: aichat.admin
+    aliases: [ai, aic]
+
+permissions:
+  aichat.use:
+    default: true
+  aichat.admin:
+    default: op
