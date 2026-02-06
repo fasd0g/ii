@@ -17,5 +17,9 @@ public final class PlayerState {
     // принудительная персона (по команде админа, только для себя)
     public String forcedPersonaId = null;
 
+    // антидубль достижений
+    public String lastAdvKey = null;
+    public long lastAdvAtMs = 0;
+
     public final Deque<String> recentAdv = new ArrayDeque<>();
 }

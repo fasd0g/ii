@@ -3,7 +3,6 @@ package com.example.aichat;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.net.URI;
@@ -28,7 +27,6 @@ public final class AiService {
     }
 
     public CompletableFuture<String> requestChatCompletion(
-            Player player,
             List<ConversationStore.Msg> history,
             String personaPrompt,
             String contextSummary,
@@ -39,12 +37,14 @@ public final class AiService {
         int timeout = plugin.getConfig().getInt("http.timeoutSeconds", 20);
 
         if (endpoint == null || endpoint.isBlank() || endpoint.contains("api.example.com")) {
-            // безопасный фолбэк без внешнего ИИ
+            return CompletableFuture.completedFuture("Я тут 🙂 (настрой http.endpoint и http.apiKey)");
+        }
+        if (apiKey == null || apiKey.isBlank() || apiKey.equals("PASTE_KEY_HERE")) {
             return CompletableFuture.completedFuture("Я тут 🙂 (настрой http.endpoint и http.apiKey)");
         }
 
         String baseSystem = plugin.getConfig().getString("ai.systemPrompt", "Ты ИИ на Minecraft сервере.");
-        String model = plugin.getConfig().getString("ai.model", "gpt-4.1-mini");
+        String model = plugin.getConfig().getString("ai.model", "openrouter/auto");
 
         String system = baseSystem
                 + "\n\n[ПЕРСОНА]\n" + safe(personaPrompt)
@@ -79,11 +79,8 @@ public final class AiService {
                 .uri(URI.create(endpoint))
                 .timeout(Duration.ofSeconds(timeout))
                 .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + apiKey)
                 .POST(HttpRequest.BodyPublishers.ofString(payload.toString()));
-
-        if (apiKey != null && !apiKey.isBlank() && !apiKey.equals("PASTE_KEY_HERE")) {
-            b.header("Authorization", "Bearer " + apiKey);
-        }
 
         return http.sendAsync(b.build(), HttpResponse.BodyHandlers.ofString())
                 .thenApply(resp -> {

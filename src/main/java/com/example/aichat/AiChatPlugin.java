@@ -4,6 +4,7 @@ import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.advancement.AdvancementDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -55,7 +56,7 @@ public final class AiChatPlugin extends JavaPlugin implements Listener {
             cmd.setTabCompleter(handler);
         }
 
-        getLogger().info("AiChat enabled (Paper 1.21.11, OpenAI-compatible endpoint).");
+        getLogger().info("AiChat enabled (Paper 1.21.11).");
     }
 
     public void reloadLocalConfig() {
@@ -67,9 +68,7 @@ public final class AiChatPlugin extends JavaPlugin implements Listener {
     public void reloadAll() {
         reloadConfig();
         reloadLocalConfig();
-        // обновим движок персон на случай изменения конфига
         this.personas = new PersonaEngine(getConfig().getConfigurationSection("personas"));
-        // обновим сервис (на случай timeout и т.п.)
         this.ai = new AiService(this);
     }
 
@@ -130,11 +129,50 @@ public final class AiChatPlugin extends JavaPlugin implements Listener {
         if (!p.hasPermission("aichat.use")) return;
 
         PlayerState st = states.get(p.getUniqueId());
-        st.lastEventAtMs = System.currentTimeMillis();
+        long now = System.currentTimeMillis();
+        st.lastEventAtMs = now;
         st.deathStreak = 0;
         st.momentum += 2.0;
 
         String advKey = e.getAdvancement().getKey().toString();
+
+        // 1) антидубль: то же достижение за последние N секунд — пропускаем
+        int dedupSec = getConfig().getInt("events.advDedupSeconds", 10);
+        if (dedupSec > 0 && advKey.equals(st.lastAdvKey) && (now - st.lastAdvAtMs) < (dedupSec * 1000L)) {
+            return;
+        }
+        st.lastAdvKey = advKey;
+        st.lastAdvAtMs = now;
+
+        // 2) рецепты часто спамят — можно игнорировать
+        if (getConfig().getBoolean("events.ignoreRecipeAdvancements", true)) {
+            String k = advKey.toLowerCase(Locale.ROOT);
+            if (k.contains("recipes/") || k.contains("recipe")) {
+                return;
+            }
+        }
+
+        // 3) Фильтр по display/announce-to-chat (убирает “авто-рецепты” и скрытые штуки)
+        AdvancementDisplay display = e.getAdvancement().getDisplay();
+        if (getConfig().getBoolean("events.requireDisplayForAdvancements", true) && display == null) {
+            return;
+        }
+        if (display != null && getConfig().getBoolean("events.requireAnnounceToChat", true) && !display.doesAnnounceToChat()) {
+            return;
+        }
+
+        // 4) Доп. фильтр по фрагментам ключа
+        var ignoreList = getConfig().getStringList("events.advancementIgnoreContains");
+        if (ignoreList != null && !ignoreList.isEmpty()) {
+            String k = advKey.toLowerCase(Locale.ROOT);
+            for (String s : ignoreList) {
+                if (s == null) continue;
+                if (!s.isBlank() && k.contains(s.toLowerCase(Locale.ROOT))) {
+                    return;
+                }
+            }
+        }
+
         st.recentAdv.addLast(advKey);
         while (st.recentAdv.size() > 5) st.recentAdv.removeFirst();
 
@@ -161,7 +199,6 @@ public final class AiChatPlugin extends JavaPlugin implements Listener {
         PlayerState st = states.get(p.getUniqueId());
         st.lastEventAtMs = System.currentTimeMillis();
 
-        // лёгкая эвристика “токсичности” — влияет только на выбор персоны
         st.toxicScore += Toxic.simpleScore(msg);
         st.toxicScore = Math.min(5.0, st.toxicScore);
 
@@ -186,7 +223,6 @@ public final class AiChatPlugin extends JavaPlugin implements Listener {
         String contextSummary = buildPlayerContextSummary(st);
 
         ai.requestChatCompletion(
-                        contextPlayer,
                         convo.snapshot(contextPlayer.getUniqueId()),
                         personaPrompt,
                         contextSummary,
@@ -229,10 +265,6 @@ public final class AiChatPlugin extends JavaPlugin implements Listener {
 
     public boolean isAiEnabled() {
         return getConfig().getBoolean("ai.enabled", true);
-    }
-
-    public String getBotName() {
-        return getConfig().getString("ai.botName", "Прохожий");
     }
 
     public void setBotNameAndSave(String newName) {

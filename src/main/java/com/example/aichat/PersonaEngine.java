@@ -37,13 +37,11 @@ public final class PersonaEngine {
     }
 
     public Persona pickPersona(PlayerState st, String userMessage, String eventKind, long nowMs) {
-        // если персона принудительно задана админом (для этого игрока)
         if (st.forcedPersonaId != null && personas.containsKey(st.forcedPersonaId)) {
             st.currentPersonaId = st.forcedPersonaId;
             return personas.get(st.forcedPersonaId);
         }
 
-        // lock чтобы не прыгало
         if (nowMs < st.personaLockedUntilMs && personas.containsKey(st.currentPersonaId)) {
             return personas.get(st.currentPersonaId);
         }
@@ -51,10 +49,9 @@ public final class PersonaEngine {
         Map<String, Double> score = new HashMap<>();
         for (Persona p : personas.values()) score.put(p.id, p.weight);
 
-        // затухание токсичности/моментума (мягкое)
         long dt = (st.lastEventAtMs == 0) ? 0 : (nowMs - st.lastEventAtMs);
         if (dt > 0) {
-            double decay = Math.min(1.0, dt / 120_000.0); // ~2 минуты
+            double decay = Math.min(1.0, dt / 120_000.0);
             st.toxicScore *= (1.0 - 0.6 * decay);
             st.momentum *= (1.0 - 0.4 * decay);
         }
@@ -74,7 +71,6 @@ public final class PersonaEngine {
                 bump(score, "buddy", 2.0);
                 bump(score, "calmmod", 0.5);
             }
-            case "chat" -> { /* ниже */ }
             default -> { }
         }
 
@@ -85,7 +81,6 @@ public final class PersonaEngine {
 
             bump(score, "calmmod", st.toxicScore * 2.5);
 
-            // лёгкая ирония только если токсичность низкая
             if (st.toxicScore < 1.2) bump(score, "sarcasticlight", 0.6);
 
             if (m.contains("бесит") || m.contains("ненавижу") || m.contains("тупо") || m.contains("капец")) {
@@ -106,7 +101,6 @@ public final class PersonaEngine {
             }
         }
 
-        // hysteresis: переключение только если реально лучше текущей
         double cur = score.getOrDefault(st.currentPersonaId, 0.0);
         if (!best.equals(st.currentPersonaId) && bestScore < cur + switchMargin) {
             best = st.currentPersonaId;

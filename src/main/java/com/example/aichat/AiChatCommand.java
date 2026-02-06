@@ -47,7 +47,6 @@ public final class AiChatCommand implements CommandExecutor, TabCompleter {
             case "setname" -> {
                 if (args.length < 2) {
                     sender.sendMessage(color("&cИспользование: /" + label + " setname <имя>"));
-                    sender.sendMessage(color("&7Пример: /" + label + " setname §bПрохожий§r"));
                     return true;
                 }
                 String newName = join(args, 1);
@@ -95,7 +94,6 @@ public final class AiChatCommand implements CommandExecutor, TabCompleter {
             case "setendpoint" -> {
                 if (args.length < 2) {
                     sender.sendMessage(color("&cИспользование: /" + label + " setendpoint <url>"));
-                    sender.sendMessage(color("&7Пример: /" + label + " setendpoint https://api.openai.com/v1/chat/completions"));
                     return true;
                 }
                 String url = join(args, 1);
@@ -108,7 +106,6 @@ public final class AiChatCommand implements CommandExecutor, TabCompleter {
             case "setkey" -> {
                 if (args.length < 2) {
                     sender.sendMessage(color("&cИспользование: /" + label + " setkey <apiKey>"));
-                    sender.sendMessage(color("&7Пример: /" + label + " setkey sk-xxxxxxxx"));
                     return true;
                 }
                 String key = join(args, 1);
@@ -120,7 +117,7 @@ public final class AiChatCommand implements CommandExecutor, TabCompleter {
 
             case "persona" -> {
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage(color("&cЭта команда доступна только игроку (не из консоли)."));
+                    sender.sendMessage(color("&cЭта команда доступна только игроку."));
                     return true;
                 }
 
@@ -134,7 +131,6 @@ public final class AiChatCommand implements CommandExecutor, TabCompleter {
                 boolean ok = plugin.forcePersonaIfExists(player, id);
                 if (!ok) {
                     sender.sendMessage(color("&cНеизвестная персона: &f" + id));
-                    sender.sendMessage(color("&7Подсказка: buddy, coach, hype, calmmod, sarcasticlight"));
                     return true;
                 }
                 sender.sendMessage(color("&aПерсона установлена: &f" + id));
@@ -163,24 +159,23 @@ public final class AiChatCommand implements CommandExecutor, TabCompleter {
 
     private void sendHelp(CommandSender sender, String label) {
         sender.sendMessage(color("&bAiChat &7— команды администратора"));
-        sender.sendMessage(color("&7/" + label + " &fhelp &7— показать это меню"));
         sender.sendMessage(color("&7/" + label + " &fstatus &7— показать текущие настройки"));
-        sender.sendMessage(color("&7/" + label + " &freload &7— перечитать config.yml без рестарта"));
+        sender.sendMessage(color("&7/" + label + " &freload &7— перечитать config.yml"));
         sender.sendMessage(color("&7/" + label + " &ftoggle &7— включить/выключить ИИ"));
-        sender.sendMessage(color("&7/" + label + " &fsetname <имя> &7— изменить имя бота (можно §-цвета)"));
-        sender.sendMessage(color("&7/" + label + " &fsetchance <0.0-1.0> &7— шанс ответа в чате"));
+        sender.sendMessage(color("&7/" + label + " &fsetname <имя> &7— изменить имя бота"));
+        sender.sendMessage(color("&7/" + label + " &fsetchance <0..1> &7— шанс ответа в чате"));
         sender.sendMessage(color("&7/" + label + " &fsetmention <true|false> &7— отвечать только при упоминании"));
-        sender.sendMessage(color("&7/" + label + " &fsetendpoint <url> &7— задать OpenAI-совместимый endpoint"));
+        sender.sendMessage(color("&7/" + label + " &fsetendpoint <url> &7— задать endpoint"));
         sender.sendMessage(color("&7/" + label + " &fsetkey <ключ> &7— задать API-ключ"));
-        sender.sendMessage(color("&7/" + label + " &fpersona [id] &7— принудительная персона для тебя (без id — авто)"));
-        sender.sendMessage(color("&7/" + label + " &fdebug <on|off> &7— показывать текущую персону в actionbar"));
-        sender.sendMessage(color("&7/" + label + " &ftest &7— тестовое сообщение от бота"));
+        sender.sendMessage(color("&7/" + label + " &fpersona [id] &7— принудительная персона (без id — авто)"));
+        sender.sendMessage(color("&7/" + label + " &fdebug <on|off> &7— показывать персону в actionbar"));
+        sender.sendMessage(color("&7/" + label + " &ftest &7— тестовое сообщение"));
     }
 
     private void sendStatus(CommandSender sender) {
         boolean enabled = plugin.getConfig().getBoolean("ai.enabled", true);
         String name = plugin.getConfig().getString("ai.botName", "Прохожий");
-        String model = plugin.getConfig().getString("ai.model", "gpt-4.1-mini");
+        String model = plugin.getConfig().getString("ai.model", "openrouter/auto");
 
         boolean replyToChat = plugin.getConfig().getBoolean("behavior.replyToChat", true);
         double chance = plugin.getConfig().getDouble("behavior.replyChance", 1.0);
@@ -216,7 +211,6 @@ public final class AiChatCommand implements CommandExecutor, TabCompleter {
     }
 
     private static String color(String s) {
-        // поддержка & и §
         return ChatColor.translateAlternateColorCodes('&', s);
     }
 
@@ -244,7 +238,6 @@ public final class AiChatCommand implements CommandExecutor, TabCompleter {
                 case "setmention" -> List.of("true", "false");
                 case "debug" -> List.of("on", "off");
                 case "setchance" -> List.of("1.0", "0.5", "0.25", "0.1", "0.0");
-                case "setname" -> List.of("Прохожий", "§bПрохожий§r");
                 case "persona" -> List.of("buddy","coach","hype","calmmod","sarcasticlight");
                 case "setendpoint" -> List.of(
                         "https://api.openai.com/v1/chat/completions",

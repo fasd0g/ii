@@ -20,7 +20,7 @@ public final class Toxic {
         // спам символами
         if (m.matches(".*([!?.])\1{5,}.*")) s += 0.6;
 
-        // мини-словарь ругани (можешь расширить)
+        // мини-словарь ругани
         if (m.contains("идиот") || m.contains("дурак") || m.contains("тупой")
                 || m.contains("сука") || m.contains("бля")) s += 1.2;
 
