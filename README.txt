@@ -4,7 +4,7 @@ AiChat (Paper 1.21.11) — AI-чат бот с динамическими пер
   gradle build
 
 Готовый JAR:
-  build/libs/ai-npc-chat-1.2.5.jar   (fat jar, с зависимостями)
+  build/libs/ai-npc-chat-1.2.6.jar   (fat jar, с зависимостями)
 
 Установка:
   1) Скопируй JAR в server/plugins/

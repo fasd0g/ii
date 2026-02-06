@@ -4,7 +4,6 @@ import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
-import org.bukkit.advancement.AdvancementDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -255,7 +254,24 @@ public final class AiChatPlugin extends JavaPlugin implements Listener {
                 + (st.forcedPersonaId != null ? ("\nПринудительная персона: " + st.forcedPersonaId) : "");
     }
 
-    private static String trimToMax(String s, int max) {
+    
+private static boolean announcesToChat(Object display) {
+    if (display == null) return true;
+    // Paper/Bukkit API differences across versions: try common method names via reflection.
+    for (String m : new String[]{"doesAnnounceToChat", "shouldAnnounceToChat", "announceToChat", "announcesToChat"}) {
+        try {
+            var method = display.getClass().getMethod(m);
+            Object r = method.invoke(display);
+            if (r instanceof Boolean b) return b;
+        } catch (NoSuchMethodException ignored) {
+        } catch (Exception ignored) {
+        }
+    }
+    // If unknown — don't block announcements.
+    return true;
+}
+
+private static String trimToMax(String s, int max) {
         s = s.trim();
         if (s.length() <= max) return s;
         return s.substring(0, Math.max(0, max - 1)) + "…";
