@@ -1,9 +1,0 @@
-
-name: AiChat
-version: 1.2.2
-main: com.example.aichat.AiChatPlugin
-api-version: "1.21"
-commands:
-  aichat:
-    description: AI chat control
-    usage: /aichat
